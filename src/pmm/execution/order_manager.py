@@ -134,6 +134,7 @@ class OrderManager:
         ts: int | None = None,
         intensity_override: float | None = None,
         depth_top: float | None = None,
+        pos_qty: float | None = None,
     ) -> SimFillStats:
         """
         Paper/dry-run 模拟成交：
@@ -162,6 +163,10 @@ class OrderManager:
 
         out = SimFillStats()
         keep: list[LiveOrderState] = []
+
+        # route A：严格不做空（paper）
+        allow_short = os.getenv("PMM_PAPER_ALLOW_SHORT", "false").lower() == "true"
+        available_qty = float(pos_qty or 0.0) if not allow_short else float("inf")
 
         for o in lst:
             side = o.side.upper()
@@ -244,6 +249,18 @@ class OrderManager:
                 frac = lo + (hi - lo) * raw
             fill_size = max(1e-6, remaining * frac)
             fill_size = min(fill_size, remaining)
+
+            # 严格不做空：SELL 成交不能超过当前可卖持仓；BUY 成交会增加可卖持仓
+            if not allow_short:
+                if side == "SELL":
+                    if available_qty <= 1e-9:
+                        keep.append(o)
+                        continue
+                    fill_size = min(fill_size, available_qty)
+                elif side == "BUY":
+                    # 买入后可用于本次 simulate_fills 内的后续卖出
+                    pass
+
             new_remaining = remaining - fill_size
             status = "FILLED" if new_remaining <= 1e-9 else "PARTIAL"
 
@@ -283,6 +300,8 @@ class OrderManager:
                     "markout_sigma_bps": sigma_bps,
                     "intensity_used": intensity,
                     "depth_top": depth_top,
+                    "pos_qty_before": float(pos_qty or 0.0),
+                    "allow_short": allow_short,
                 },
             })
 
@@ -306,6 +325,12 @@ class OrderManager:
             out.fills += 1
             out.markout_sum += float(markout)
             out.realized_spread_sum += float(realized_spread) * float(fill_size)
+
+            if not allow_short:
+                if side == "SELL":
+                    available_qty -= float(fill_size)
+                elif side == "BUY":
+                    available_qty += float(fill_size)
             if status == "PARTIAL":
                 o.size = float(new_remaining)
                 keep.append(o)

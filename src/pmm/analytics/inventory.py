@@ -37,8 +37,10 @@ class InventoryEngine:
             self.cash -= cost
         else:
             # SELL
-            proceeds = price * size - fee
             sell_size = min(size, p.qty)  # conservative: do not allow short in accounting
+            # 现金入账必须与实际卖出数量一致，否则会出现“超额卖出但持仓被截断”的现金虚增
+            fee_used = fee * (sell_size / size) if size > 1e-12 else 0.0
+            proceeds = price * sell_size - fee_used
             p.realized += (price - p.avg_cost) * sell_size
             p.qty -= sell_size
             if p.qty <= 1e-12:
