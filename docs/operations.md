@@ -14,6 +14,23 @@ pmm run paper
 pmm run live --dry-run
 ```
 
+### 2.1 配置文件
+仓库提供 `env.example`（配置示例）。建议：
+
+```bash
+cp env.example .env
+```
+
+> `.env` 用于存放你的本地私钥与 API 凭据，请不要提交到仓库。
+
+### 2.2 Paper 成交调参（常用）
+Paper/Dry-run 现在会生成模拟成交写入 `trades`，你可以通过环境变量快速调节成交节奏：
+
+- **成交强度**：`PMM_PAPER_FILL_INTENSITY`（越大成交越多）
+- **深度自适应**：`PMM_PAPER_INTENSITY_ADAPT=true`，并可用分位数自动标定 `PMM_PAPER_DEPTH_REF_MODE=quantile`
+- **partial 比例与分布**：`PMM_PAPER_FULL_FILL_PROB`、`PMM_PAPER_PARTIAL_BETA_*`、`PMM_PAPER_PARTIAL_MIN/MAX_FRAC`
+- **markout 波动**：`PMM_PAPER_MARKOUT_SIGMA_BPS`（常用 20 或 50）
+
 ## 3) 实盘
 
 确保你已填写 `.env` 中的 L2 creds（用于 user tape），并确认风控参数。
@@ -21,6 +38,9 @@ pmm run live --dry-run
 ```bash
 pmm run live
 ```
+
+### 3.1 仪表盘刷新
+仪表盘默认 1 秒刷新一次：`PMM_DASHBOARD_REFRESH_SEC=1.0`（可配置）。
 
 ## 4) 资金分配（Capital Allocation Optimizer）
 
