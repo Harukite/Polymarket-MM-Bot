@@ -432,7 +432,12 @@ def cmd_run(args):
                         ts=loop_ts,
                         intensity_override=intensity_eff,
                         depth_top=depth_top,
-                        pos_qty=float(getattr(inv.pos.get(str(token_id)), "qty", 0.0)) if hasattr(inv, "pos") else 0.0,
+                        # inv.pos.get(...) 可能返回 None；getattr(None, ...) 会抛 AttributeError
+                        pos_qty=(
+                            float((inv.pos.get(str(token_id)) or inv.pos.get(token_id)).qty)
+                            if (hasattr(inv, "pos") and (inv.pos.get(str(token_id)) or inv.pos.get(token_id)) is not None)
+                            else 0.0
+                        ),
                     )
                     if sim_stats.fills:
                         params.state.fills += int(sim_stats.fills)
