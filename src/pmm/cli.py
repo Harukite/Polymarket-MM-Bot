@@ -411,7 +411,9 @@ def cmd_run(args):
                             best_bid=best_bid,
                             best_ask=best_ask,
                         )
-                        cb.record_place(ok=res.success)
+                        # SKIP（同价同量）不应计入 placed，否则会高估真实下单频率
+                        if not (res.raw and isinstance(res.raw, dict) and res.raw.get("action") == "SKIP"):
+                            cb.record_place(ok=res.success)
 
                         halt, why = cb.should_halt()
                         if halt:

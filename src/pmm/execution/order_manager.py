@@ -66,6 +66,18 @@ class OrderManager:
             return abs(old - new) >= (self.tick_size - 1e-12)
         return abs(old - new) >= max(1e-4, old * 0.0001)
 
+    def _size_changed(self, old: float, new: float) -> bool:
+        """
+        实盘里改 size 通常需要撤单重挂；但为了避免无意义 churn，只有当变化超过阈值才重挂。
+        """
+        old = float(old)
+        new = float(new)
+        if old <= 1e-12:
+            return True
+        pct = abs(new - old) / max(1e-12, abs(old))
+        thresh = float(os.getenv("PMM_ORDER_SIZE_REPLACE_PCT", "0.10"))  # 10% 默认阈值
+        return pct >= thresh
+
     def _guard_post_only(self, side: str, price: float, best_bid: float | None, best_ask: float | None) -> float | None:
         if not self.post_only:
             return price
@@ -316,9 +328,16 @@ class OrderManager:
 
         existing = self.live.get(token_id, [])
 
+        # 如果同侧已有挂单且价格未变（且 size 变化不大），则跳过下单，避免每轮因为 cap 触发“撤旧挂新”
+        for o in list(existing):
+            if o.side != side:
+                continue
+            if (not self._price_changed(o.price, price)) and (not self._size_changed(o.size, float(size))):
+                return PlaceOrderResult(success=True, venue_order_id=o.venue_order_id, raw={"action": "SKIP", "reason": "no_change"})
+
         # Replace same-side order if price changed
         for o in list(existing):
-            if o.side == side and self._price_changed(o.price, price):
+            if o.side == side and (self._price_changed(o.price, price) or self._size_changed(o.size, float(size))):
                 ok = self.exchange.cancel(venue_order_id=o.venue_order_id)
                 repo.upsert_order(self.conn, {
                     "run_id": self.run_id,
@@ -333,7 +352,7 @@ class OrderManager:
                     "status": "CANCELED" if ok else "ERROR",
                     "created_ts": o.created_ts,
                     "updated_ts": now,
-                    "meta_json": {"reason": "reprice", "ok": ok, "new_price": price},
+                    "meta_json": {"reason": "replace", "ok": ok, "new_price": price, "new_size": float(size)},
                 })
                 try:
                     existing.remove(o)
