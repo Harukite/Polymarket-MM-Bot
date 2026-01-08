@@ -276,10 +276,10 @@ class RichDashboard:
         for _ in range(4):
             kpi_grid.add_column(ratio=1)
         kpi_grid.add_row(
-            _kpi_card(title="CASH", value=f"{cash:,.2f}", style="green"),
-            _kpi_card(title="EQUITY", value=f"{equity:,.2f}", style="green"),
-            _kpi_card(title="GROSS", value=f"{gross_exposure:,.2f}", style="yellow"),
-            _kpi_card(title="PNL (R/U)", value=f"{realized:,.2f} / {unrealized:,.2f}", style="magenta"),
+            _kpi_card(title="现金 (Cash)", value=f"{cash:,.2f}", style="green"),
+            _kpi_card(title="权益 (Equity)", value=f"{equity:,.2f}", style="green"),
+            _kpi_card(title="敞口 (Gross)", value=f"{gross_exposure:,.2f}", style="yellow"),
+            _kpi_card(title="盈亏 (已/未)", value=f"{realized:,.2f} / {unrealized:,.2f}", style="magenta"),
         )
 
         bars = Table.grid(expand=True)
@@ -287,14 +287,14 @@ class RichDashboard:
         bars.add_column(ratio=2)
         bars.add_column(ratio=1, justify="right")
         bars.add_row(
-            Text("reject rate", style="dim"),
+            Text("拒单率", style="dim"),
             ProgressBar(total=100, completed=min(100, int(reject_rate * 100)), width=24),
             Text(f"{reject_rate*100:.2f}%", style="bright_cyan"),
         )
         bars.add_row(
-            Text("orders", style="dim"),
+            Text("订单统计", style="dim"),
             Text(
-                f"placed {cb_stats.get('placed', 0)}  •  rejected {cb_stats.get('rejected', 0)}  •  cancels/min {cb_stats.get('cancels_1m', 0)}  •  errors {cb_stats.get('errors', 0)}",
+                f"下单 {cb_stats.get('placed', 0)}  •  拒单 {cb_stats.get('rejected', 0)}  •  撤单/分 {cb_stats.get('cancels_1m', 0)}  •  错误 {cb_stats.get('errors', 0)}",
                 style="bright_cyan",
             ),
             Text("", style="dim"),
@@ -304,7 +304,7 @@ class RichDashboard:
         self._layout["top"].update(
             Panel(
                 header,
-                title=f"run_id  {_short_id(self.run_id, head=8, tail=4)}",
+                title=f"运行 ID  {_short_id(self.run_id, head=8, tail=4)}",
                 subtitle="退出：Ctrl+C   •   日志：./data/pmm.log（默认）   •   刷新：PMM_DASHBOARD_REFRESH_SEC（默认 1.0s）",
                 border_style="bright_cyan",
                 box=box.ROUNDED,
