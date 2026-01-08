@@ -1,0 +1,41 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# ===== Virtualenv =====
+.venv/
+venv/
+ENV/
+.env/
+env/
+
+# ===== Env files / secrets =====
+.env
+.env.*
+*.pem
+*.key
+
+# ===== Logs =====
+*.log
+data/pmm.log
+
+# ===== SQLite / local data =====
+data/*.sqlite
+data/*.sqlite-*
+data/*.db
+data/*.db-*
+
+# ===== OS / Editor =====
+.DS_Store
+.idea/
+.vscode/
+

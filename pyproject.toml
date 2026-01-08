@@ -1,0 +1,23 @@
+[project]
+name = "polymarket-mm-bot"
+version = "0.1.0"
+description = "Polymarket CLOB market-making research + paper trading + live trading scaffold (top 50 liquidity markets)"
+requires-python = ">=3.10"
+dependencies = [
+  "py-clob-client>=0.18.0",
+  "requests>=2.31.0",
+  "pydantic>=2.7.0",
+  "python-dotenv>=1.0.1",
+  "websocket-client>=1.8.0",
+  "tenacity>=8.2.3",
+  "orjson>=3.10.0",
+  "pandas>=2.1.0",
+  "rich>=13.7.0",
+  "httpx>=0.27.0",
+]
+
+[project.scripts]
+pmm = "pmm.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
