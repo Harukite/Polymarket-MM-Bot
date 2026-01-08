@@ -178,9 +178,11 @@ class OrderManager:
             # 竞争力因子：离 best 越近越容易成交（按 tick 距离分段）
             competitive = 0.15
             if side == "BUY" and best_bid is not None:
-                d_ticks = abs(px - float(best_bid)) / max(1e-9, tick)
+                # 方向性距离：BUY 价 >= best_bid 说明我们在 best 或更优（应视为 0 tick）
+                d_ticks = max(0.0, (float(best_bid) - px) / max(1e-9, tick))
             elif side == "SELL" and best_ask is not None:
-                d_ticks = abs(px - float(best_ask)) / max(1e-9, tick)
+                # 方向性距离：SELL 价 <= best_ask 说明我们在 best 或更优（应视为 0 tick）
+                d_ticks = max(0.0, (px - float(best_ask)) / max(1e-9, tick))
             else:
                 d_ticks = 9e9
             if d_ticks <= 0.5:
